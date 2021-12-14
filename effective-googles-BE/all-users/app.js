@@ -1,6 +1,6 @@
 // const axios = require('axios')
 // const url = 'http://checkip.amazonaws.com/';
-let response;
+const {connectToDB} = require("dbconnection");
 
 /**
  *
@@ -15,11 +15,12 @@ let response;
  * 
  */
 
-
-const getUsers = (con, sql) => {
-    return new Promise((resolve, reject) => {
+exports.lambdaHandler = async (event, context) => {
+    const connection = await connectToDB();
+    const sql = "select * from users;"
+    let users =  new Promise((resolve, reject) => {
         try{
-            con.query(sql, (err, res) => {
+            connection.query(sql, (err, res) => {
                 if(err) {
                     throw err;
                 }
@@ -30,14 +31,13 @@ const getUsers = (con, sql) => {
             reject(err);
         }
     })
-}
 
-exports.lambdaHandler = async (event, context) => {
-    const connection = await connectToDB();
-    const sql = "select * from users;"
-    let users = await getUsers(connection, sql);
-    return ({
-        'statusCode': 200,
-        'body': JSON.stringify(users)
-    });
+    users.then((usrs) => {
+        return ({
+            'statusCode': 200,
+            'body': JSON.stringify({
+                message: usrs,
+            })
+        })
+    })
 };
